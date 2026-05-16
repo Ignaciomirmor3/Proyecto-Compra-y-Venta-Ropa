@@ -1,0 +1,220 @@
+{
+    "info": {
+        "name": "DevilMay.stV5 - Ecosistema",
+        "description": "Colección oficial para pruebas en vivo de la defensa. Todos los endpoints apuntan al API Gateway (puerto 8080).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Happy Paths (Flujo de Éxito)",
+            "item": [
+                {
+                    "name": "1. Crear Producto (Catálogo)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nombreProducto\": \"Polera Oversize Minimal\",\n  \"descripcionProducto\": \"Polera 100% algodón\",\n  \"precioProducto\": 19990,\n  \"tallaProducto\": \"L\",\n  \"estadoInventario\": \"DISPONIBLE\",\n  \"urlImagen\": \"http://imagen.com/polera.jpg\",\n  \"genero\": {\n    \"id_genero\": 2\n  },\n  \"tipoPrenda\": {\n    \"id_tipo\": 2\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/productos",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "productos"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Agregar a Carrito",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"idProducto\": 1,\n  \"cantidad\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/carritos",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "carritos"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Crear Orden (Reservas)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"id_Carrito\": 1,\n  \"precio_Total\": 19990,\n  \"nombre_Cliente\": \"Joaquin Jerez\",\n  \"rut_Cliente\": \"12345678-9\",\n  \"instagram_Cliente\": \"@joaquin_jerez\",\n  \"telefono_Respaldo\": 987654321,\n  \"correo_Respaldo\": \"joaquin@correo.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/reservas/ordenes",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "reservas",
+                                "ordenes"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "4. Crear Despacho (Logística)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nro_Orden\": 1,\n  \"direccion_Envio\": \"Av. Concha y Toro 3456\",\n  \"comuna\": \"Puente Alto\",\n  \"idEntrega\": 1,\n  \"estadoDespacho\": {\n    \"nombre_Estado\": \"EN_PREPARACION\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/api/v2/logistica/despacho",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v2",
+                                "logistica",
+                                "despacho"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bad Paths (Prueba de Excepciones)",
+            "item": [
+                {
+                    "name": "Falla Validacion DTO (Campo Vacío)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"cantidad\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/carritos",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "carritos"
+                            ]
+                        },
+                        "description": "Debe retornar 400 Bad Request gracias al @NotNull de idProducto atrapado por GlobalExceptionHandler."
+                    }
+                },
+                {
+                    "name": "Falla Exclusividad Stock (Cantidad Maxima)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"idProducto\": 1,\n  \"cantidad\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/carritos",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "carritos"
+                            ]
+                        },
+                        "description": "Debe retornar 400 Bad Request gatillado por el @Max(1) del CarritoDTO al intentar llevar más de una prenda exclusiva."
+                    }
+                },
+                {
+                    "name": "Falla Recurso No Encontrado",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/reservas/ordenes/999",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "reservas",
+                                "ordenes",
+                                "999"
+                            ]
+                        },
+                        "description": "Debe retornar 404 Not Found atrapado por GlobalExceptionHandler."
+                    }
+                }
+            ]
+        }
+    ]
+}
