@@ -1,18 +1,17 @@
 package com.example.service_logistica.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.service_logistica.model.Despacho;
 import com.example.service_logistica.repository.DespachoRepository;
 
-@Slf4j
+import jakarta.transaction.Transactional;
+
 @Service
 public class DespachoService {
 
@@ -26,48 +25,29 @@ public class DespachoService {
         return despachoRepository.findAll();
     }
 
+    @Transactional
     public Despacho crearDespacho(Despacho despacho){
-        log.info("Creando despacho para orden nro: {}", despacho.getNro_Orden());
-        Despacho guardado = despachoRepository.save(despacho);
-        notificarEstadoAReservas(guardado);
-        return guardado;
+        // VERIFICAR SI ID_CARRITO EXISTE EN SERVICE-CARRITO
+        validarExistenciaOrden(despacho.getNro_Orden());
+
+        return despachoRepository.save(despacho);
     }
 
     public Optional<Despacho> encontrarDespacho(Long id){
         return despachoRepository.findById(id);
     }
 
+    @Transactional
     public Despacho actualizarDespacho(Long id, Despacho despacho) {
-        log.info("Actualizando despacho con id: {}", id);
         Despacho existente = despachoRepository.findById(id).orElse(null);
         if (existente != null) {
             existente.setEstadoDespacho(despacho.getEstadoDespacho());
-            Despacho actualizado = despachoRepository.save(existente);
-            notificarEstadoAReservas(actualizado);
-            return actualizado;
+            return despachoRepository.save(existente);
         }
         return null;
     }
 
-    private void notificarEstadoAReservas(Despacho despacho) {
-        if (despacho.getNro_Orden() != null && despacho.getEstadoDespacho() != null) {
-            try {
-                String nombreEstado = despacho.getEstadoDespacho().getNombre_Estado();
-                String reservasUrl = "http://localhost:8084/api/v1/reservas/ordenes/" + despacho.getNro_Orden() + "/estado?estado=" + nombreEstado;
-                log.info("Notificando estado {} a reservas: {}", nombreEstado, reservasUrl);
-                // Usamos WebClient PUT
-                webClientBuilder.build()
-                        .put()
-                        .uri(reservasUrl)
-                        .retrieve()
-                        .bodyToMono(Void.class)
-                        .subscribe();
-            } catch (Exception e) {
-                log.error("Error al comunicar con service-reservas: {}", e.getMessage());
-            }
-        }
-    }
-
+    @Transactional
     public void eliminarDespacho(Long id) {
         despachoRepository.deleteById(id);
     }
@@ -75,8 +55,26 @@ public class DespachoService {
 
 
 
-
     public List<Despacho> filtrarDespachoYEntrega(Long idDespacho, Long idEntrega){
         return despachoRepository.findByDespachoYEntrega(idDespacho, idEntrega);
+    }
+
+
+
+
+    // Validar que la ID de la orden existe
+    private void validarExistenciaOrden(Long id){
+        try {
+            webClientBuilder
+            .build()
+            .get()
+            .uri("http://localhost:8084/api/v2/reservas/ordenes/" + id)
+            .retrieve()
+            .toBodilessEntity() // No devuelve cuerpo, solo código del servidor
+            .block();
+        } catch (Exception e) {
+            // Lanza excepción para que @Transactional haga rollback
+            throw new RuntimeException("Error de validación: La orden no existe o el servicio no responde.");
+        }
     }
 }

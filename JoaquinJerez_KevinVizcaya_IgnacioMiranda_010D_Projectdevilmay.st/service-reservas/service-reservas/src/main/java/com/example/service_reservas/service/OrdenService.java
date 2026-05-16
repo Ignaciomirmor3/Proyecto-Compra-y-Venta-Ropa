@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.example.service_reservas.model.Orden;
 import com.example.service_reservas.repository.OrdenRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class OrdenService {
 
@@ -22,8 +24,11 @@ public class OrdenService {
         return ordenRepository.findAll();
     }
 
+    @Transactional
     public Orden crearOrden(Orden orden){
         // VERIFICAR SI ID_CARRITO EXISTE EN SERVICE-CARRITO
+        validarExistenciaCarrito(orden.getId_Carrito());
+        
         return ordenRepository.save(orden);
     }
 
@@ -35,6 +40,7 @@ public class OrdenService {
         return null;
     }
 
+    @Transactional
     public Orden actualizarOrden(Long id, Orden orden){
         Orden existente = ordenRepository.findById(id).orElse(null);
         if (existente != null){
@@ -44,21 +50,7 @@ public class OrdenService {
         return null;
     }
 
-    @Autowired
-    private com.example.service_reservas.repository.EstadoOrdenRepository estadoOrdenRepository;
-
-    public Orden actualizarEstadoPorNombre(Long idOrden, String nombreEstado) {
-        Orden existente = ordenRepository.findById(idOrden).orElse(null);
-        if (existente != null) {
-            com.example.service_reservas.model.EstadoOrden estado = estadoOrdenRepository.findByNombre_Estado(nombreEstado).orElse(null);
-            if (estado != null) {
-                existente.setEstadoOrden(estado);
-                return ordenRepository.save(existente);
-            }
-        }
-        return null;
-    }
-
+    @Transactional
     public void borrarOrden(Long id){
         ordenRepository.deleteById(id);
     }
@@ -91,5 +83,21 @@ public class OrdenService {
             orden.setDatosDespacho("Error al cargar datos del despacho.");
         }
         return orden;
+    }
+
+    // Validar que la ID del carrito existe
+    private void validarExistenciaCarrito(Long id){
+        try {
+            webClientBuilder
+            .build()
+            .get()
+            .uri("http://localhost:8083/api/v1/carritos/" + id)
+            .retrieve()
+            .toBodilessEntity() // No devuelve cuerpo, solo código del servidor
+            .block();
+        } catch (Exception e) {
+            // Lanza excepción para que @Transactional haga rollback
+            throw new RuntimeException("Error de validación: El carrito no existe o el servicio no responde.");
+        }
     }
 }

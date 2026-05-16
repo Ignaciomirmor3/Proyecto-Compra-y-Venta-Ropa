@@ -1,8 +1,5 @@
 package com.example.service_logistica.controller;
 
-import com.example.service_logistica.dto.DespachoDTO;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.service_logistica.model.Despacho;
-import com.example.service_logistica.model.EstadoDespacho;
-import com.example.service_logistica.model.MetodoEntrega;
 import com.example.service_logistica.service.DespachoService;
 
-@Slf4j
 @RestController
-@RequestMapping("/api/v2/logistica/despacho")
+@RequestMapping("/api/v3/logistica/despacho")
 public class DespachoController {
 
     @Autowired
@@ -41,31 +35,14 @@ public class DespachoController {
         return ResponseEntity.ok(despachos);
     }
 
-@PostMapping
-public ResponseEntity<Despacho> Crear(@jakarta.validation.Valid @RequestBody DespachoDTO despachoDTO){
-    log.info("Llamada a POST /api/v2/logistica/despacho con orden nro: {}", despachoDTO.getNro_Orden());
-    
-    Despacho despacho = new Despacho();
-    despacho.setNro_Orden(despachoDTO.getNro_Orden());
-    
-    // Ahora que el DTO los tiene, los asignamos correctamente a la entidad
-    despacho.setDireccion_Envio(despachoDTO.getDireccion_Envio());
-    despacho.setComuna(despachoDTO.getComuna());
-    
-    // Forzamos el estado en el código para asegurar que la inserción no sea null
-    EstadoDespacho estado = new EstadoDespacho();
-    estado.setNombre_Estado("EN_PREPARACION");
-    despacho.setEstadoDespacho(estado);
-    
-    // Usamos el nuevo idEntrega del DTO que calza con Postman
-    if (despachoDTO.getIdEntrega() != null) {
-        MetodoEntrega me = new MetodoEntrega();
-        me.setId_Metodo_Entrega(despachoDTO.getIdEntrega());
-        despacho.setMetodoEntrega(me);
+    @PostMapping
+    public ResponseEntity<?> Crear(@RequestBody Despacho despacho){
+        try {
+            return ResponseEntity.ok(despachoService.crearDespacho(despacho));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
-    
-    return ResponseEntity.ok(despachoService.crearDespacho(despacho));
-}
 
     @GetMapping("/{id}")
     public ResponseEntity<Despacho> EncontrarPorId(@PathVariable Long id){
@@ -73,26 +50,7 @@ public ResponseEntity<Despacho> Crear(@jakarta.validation.Valid @RequestBody Des
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Despacho> Actualizar(@PathVariable Long id, @jakarta.validation.Valid @RequestBody DespachoDTO despachoDTO){
-        log.info("Llamada a PUT /api/v2/logistica/despacho/{} para actualizar estado", id);
-        
-        Despacho despacho = new Despacho();
-        despacho.setNro_Orden(despachoDTO.getNro_Orden());
-        despacho.setDireccion_Envio(despachoDTO.getDireccion_Envio());
-        despacho.setComuna(despachoDTO.getComuna());
-        
-        // Forzamos el estado para evitar que Hibernate reciba un null transitorio
-        EstadoDespacho estado = new EstadoDespacho();
-        estado.setNombre_Estado("EN_PREPARACION");
-        despacho.setEstadoDespacho(estado);
-        
-        // 🔥 CORRECCIÓN: Cambiamos getMetodoEntrega() por getIdEntrega()
-        if (despachoDTO.getIdEntrega() != null) {
-            MetodoEntrega me = new MetodoEntrega();
-            me.setId_Metodo_Entrega(despachoDTO.getIdEntrega());
-            despacho.setMetodoEntrega(me);
-        }
-        
+    public ResponseEntity<Despacho> Actualizar(@PathVariable Long id, @RequestBody Despacho despacho) {
         Despacho actualizado = despachoService.actualizarDespacho(id, despacho);
         if (actualizado != null){
             return ResponseEntity.ok(actualizado);

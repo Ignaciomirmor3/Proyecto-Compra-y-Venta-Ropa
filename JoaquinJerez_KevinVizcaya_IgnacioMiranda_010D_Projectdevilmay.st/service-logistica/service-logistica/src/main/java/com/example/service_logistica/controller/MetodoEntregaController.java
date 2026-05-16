@@ -17,7 +17,7 @@ import com.example.service_logistica.model.MetodoEntrega;
 import com.example.service_logistica.service.MetodoEntregaService;
 
 @RestController
-@RequestMapping("/api/v2/logistica/metodoentrega")
+@RequestMapping("/api/v3/logistica/metodoentrega")
 public class MetodoEntregaController {
 
     @Autowired
@@ -35,7 +35,7 @@ public class MetodoEntregaController {
     }
 
     @PostMapping
-    public ResponseEntity<MetodoEntrega> Crear(@jakarta.validation.Valid @RequestBody MetodoEntrega metodo){
+    public ResponseEntity<MetodoEntrega> Crear(@RequestBody MetodoEntrega metodo){
         return ResponseEntity.ok(metodoEntregaService.crearMetodo(metodo));
     }
 
@@ -45,7 +45,7 @@ public class MetodoEntregaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MetodoEntrega> Actualizar(@PathVariable Long id, @jakarta.validation.Valid @RequestBody MetodoEntrega metodo) {
+    public ResponseEntity<MetodoEntrega> Actualizar(@PathVariable Long id, @RequestBody MetodoEntrega metodo) {
         MetodoEntrega actualizado = metodoEntregaService.actualizarMetodo(id, metodo);
         if (actualizado != null){
             return ResponseEntity.ok(actualizado);

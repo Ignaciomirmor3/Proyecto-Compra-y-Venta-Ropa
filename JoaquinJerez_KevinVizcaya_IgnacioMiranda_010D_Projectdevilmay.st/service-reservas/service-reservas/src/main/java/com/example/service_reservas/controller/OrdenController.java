@@ -18,7 +18,7 @@ import com.example.service_reservas.model.Orden;
 import com.example.service_reservas.service.OrdenService;
 
 @RestController
-@RequestMapping("/api/v1/reservas/ordenes")
+@RequestMapping("/api/v2/reservas/ordenes")
 public class OrdenController {
 
     @Autowired
@@ -34,8 +34,12 @@ public class OrdenController {
     }
 
     @PostMapping
-    public ResponseEntity<Orden> Crear(@jakarta.validation.Valid @RequestBody Orden orden){
-        return ResponseEntity.ok(ordenService.crearOrden(orden));
+    public ResponseEntity<?> Crear(@RequestBody Orden orden){
+        try {
+            return ResponseEntity.ok(ordenService.crearOrden(orden));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
@@ -48,21 +52,12 @@ public class OrdenController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Orden> actualizarOrden(@PathVariable Long id, @jakarta.validation.Valid @RequestBody Orden orden){
+    public ResponseEntity<Orden> actualizarOrden(@PathVariable Long id, @RequestBody Orden orden){
         Orden actualizada = ordenService.actualizarOrden(id, orden);
         if (actualizada != null){
             return ResponseEntity.ok(actualizada);
         }
         return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}/estado")
-    public ResponseEntity<Orden> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
-        Orden actualizada = ordenService.actualizarEstadoPorNombre(id, estado);
-        if (actualizada != null) {
-            return ResponseEntity.ok(actualizada);
-        }
-        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")

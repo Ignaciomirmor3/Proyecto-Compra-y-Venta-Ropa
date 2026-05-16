@@ -17,7 +17,7 @@ import com.example.service_logistica.model.EstadoDespacho;
 import com.example.service_logistica.service.EstadoDespachoService;
 
 @RestController
-@RequestMapping("/api/v2/logistica/estadodespacho")
+@RequestMapping("/api/v3/logistica/estadodespacho")
 public class EstadoDespachoController {
 
     @Autowired
@@ -35,7 +35,7 @@ public class EstadoDespachoController {
     }
 
     @PostMapping
-    public ResponseEntity<EstadoDespacho> Crear(@jakarta.validation.Valid @RequestBody EstadoDespacho estado){
+    public ResponseEntity<EstadoDespacho> Crear(@RequestBody EstadoDespacho estado){
         return ResponseEntity.ok(estadoDespachoService.crearEstado(estado));
     }
 
@@ -45,7 +45,7 @@ public class EstadoDespachoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EstadoDespacho> Actualizar(@PathVariable Long id, @jakarta.validation.Valid @RequestBody EstadoDespacho estado) {
+    public ResponseEntity<EstadoDespacho> Actualizar(@PathVariable Long id, @RequestBody EstadoDespacho estado) {
         EstadoDespacho actualizado = estadoDespachoService.actualizarEstado(id, estado);
         if (actualizado != null){
             return ResponseEntity.ok(actualizado);
