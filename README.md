@@ -92,3 +92,4 @@ Para probar la validación DTO y el Global Exception Handler, intenta pedir más
   "idProducto": 105,
   "cantidad": 2
 }
+Nota: Todos los flujos de prueba (Happy Paths y Bad Paths) fueron verificados exitosamente
